@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#filename: AsterEsxiControler.py
+#filename: esxi_controller.py
 #
 #This script will help you to manage the virtual machine which based on the ESXi.
 #Please use AsterEsxiControler.py -h to get its usage.
