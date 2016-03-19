@@ -2,7 +2,7 @@
 #filename: esxi_controller.py
 #
 #This script will help you to manage the virtual machine which based on the ESXi.
-#Please ue: esxi_controller.py -h to get its usage.
+#Please use: esxi_controller.py -h to get its usage.
 #
 
 import os
