@@ -23,7 +23,7 @@ logging.basicConfig(level=logging.DEBUG,
 ssl._create_default_https_context = ssl._create_unverified_context
 
 
-class AsterEsxiControler(object):
+class EsxiController(object):
 
     def __init__(self, servername=None, password=None, username='root'):
         # Specify excluding VMs' preffix
@@ -47,7 +47,7 @@ class AsterEsxiControler(object):
 
         try:
             self.server.connect(self.servername, self.username, self.password,
-                trace_file='/tmp/AsterEsxiDebug.txt')
+                trace_file='/tmp/esxi_debug.txt')
         except BaseException, e:
             logging.debug('Can not connect to %s: %s' % (self.servername, e))
             #sys.exit(1)
@@ -248,9 +248,9 @@ def mul_proc_exec(serverlist, modulename, classname, argfunc):
 
 def main():
     parser = ArgumentParser(description = 'Aster Esxi vm manager. Please check \
-                             the log "/tmp/AsterEsxiDebug.txt" if have any questions. \
+                             the log "/tmp/esxi_debug.txt" if have any questions. \
                              You can terminate the script by "Ctrl + c".', \
-                            epilog = 'Ex: AsterEsxiControler.py -list_inuse all ')
+                            epilog = 'Ex: esxi_controller.py -list_inuse all ')
     parser.add_argument('-power_on', dest = 'power_on', choices = ('all', 'usevms'), \
                          help='power on all vms or in using vms, the optional parameter (all | usevms)')
     parser.add_argument('-power_off', dest = 'power_off', choices = ('all', 'usevms'), \
@@ -274,7 +274,7 @@ def main():
     # Obtain the current module name, class name
     FILENAME = os.path.realpath(sys.argv[0]).split(os.sep)[-1]
     MODULE_NAME = FILENAME.split('.')[0]
-    CLASS_NAME = AsterEsxiControler().class_name
+    CLASS_NAME = EsxiController().class_name
 
     if args.power_on == 'all':
         logging.debug('start all servers.')
