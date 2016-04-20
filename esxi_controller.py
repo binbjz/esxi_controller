@@ -247,7 +247,7 @@ def mul_proc_exec(serverlist, modulename, classname, argfunc):
 
 
 def main():
-    parser = ArgumentParser(description = 'Aster Esxi vm manager. Please check \
+    parser = ArgumentParser(description = 'Esxi vm manager. Please check \
                              the log "/tmp/esxi_debug.txt" if have any questions. \
                              You can terminate the script by "Ctrl + c".', \
                             epilog = 'Ex: esxi_controller.py -list_inuse all ')
