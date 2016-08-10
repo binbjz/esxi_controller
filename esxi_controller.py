@@ -266,7 +266,7 @@ def main():
     args = parser.parse_args()
 
     SERVERLIST = {
-    # Esxi server IP address
+    # Esxi server IP address: password
    'xx.xx.xx.xx': 'xx',
    'xx.xx.xx.xx': 'xx',
    }
