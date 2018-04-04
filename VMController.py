@@ -1,8 +1,8 @@
 #!/usr/bin/env python
-# filename: EsxiController.py
+# filename: VMController.py
 #
 # This script will help you to manage the virtual machine which based on the ESXi.
-# Please use: EsxiController.py -h to get its usage.
+# Please use: VMController.py -h to get its usage.
 #
 
 import os
