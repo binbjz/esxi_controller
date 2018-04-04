@@ -1,8 +1,8 @@
 #!/usr/bin/env python
-# filename: esxi_controller.py
+# filename: EsxiController.py
 #
 # This script will help you to manage the virtual machine which based on the ESXi.
-# Please use: esxi_controller.py -h to get its usage.
+# Please use: EsxiController.py -h to get its usage.
 #
 
 import os
@@ -24,8 +24,11 @@ ssl._create_default_https_context = ssl._create_unverified_context
 
 class EsxiController(object):
     def __init__(self, servername=None, password=None, username='root'):
+        # Initialize viserver
+        self.vi_server = VIServer()
+
         # Specify excluding VMs' preffix
-        self.p = re.compile('xx|xx', re.I)
+        self.p = re.compile('xx|yy', re.I)
 
         self.class_name = self.__class__.__name__
         self.servername = servername
@@ -41,31 +44,30 @@ class EsxiController(object):
 
     def connect(self):
         logging.debug('connecting to %s' % self.servername)
-        self.server = VIServer()
 
         try:
-            self.server.connect(self.servername, self.username, self.password,
-                                trace_file='/tmp/esxi_debug.txt')
-        except BaseException, e:
+            self.vi_server.connect(self.servername, self.username, self.password,
+                                   trace_file='/tmp/esxi_debug.txt')
+        except BaseException as e:
             logging.debug('Can not connect to %s: %s' % (self.servername, e))
             # sys.exit(1)
         else:
-            if self.server.is_connected():
+            if self.vi_server.is_connected():
                 logging.debug('connected to %s successfully' % self.servername)
                 logging.debug('Currently server version is: %s %s'
-                              % (self.server.get_server_type(), self.server.get_api_version()))
+                              % (self.vi_server.get_server_type(), self.vi_server.get_api_version()))
 
     def disconnect(self):
-        self.server.disconnect()
+        self.vi_server.disconnect()
         logging.debug('To disconnect from server %s\n' % self.servername)
 
     def get_vmlist(self):
-        self.vmlist = self.server.get_registered_vms()
+        self.vmlist = self.vi_server.get_registered_vms()
         return self.vmlist
 
     def get_vmstatus(self):
         for vmPath in self.get_vmlist():
-            vm = self.server.get_vm_by_path(vmPath)
+            vm = self.vi_server.get_vm_by_path(vmPath)
             vminfo = vm.get_properties(from_cache=False)
             vmstatus = vm.get_status()
             vmname = vminfo['name']
@@ -74,7 +76,7 @@ class EsxiController(object):
 
     def get_inuse_vmstatus(self):
         for vmPath in self.get_vmlist():
-            vm = self.server.get_vm_by_path(vmPath)
+            vm = self.vi_server.get_vm_by_path(vmPath)
             vminfo = vm.get_properties(from_cache=False)
             vmstatus = vm.get_status()
             vmname = vminfo['name']
@@ -85,7 +87,7 @@ class EsxiController(object):
 
     def get_vmnamelist(self):
         for vmPath in self.get_vmlist():
-            vm = self.server.get_vm_by_path(vmPath)
+            vm = self.vi_server.get_vm_by_path(vmPath)
             vminfo = vm.get_properties(from_cache=False)
             vmname = vminfo['name']
             vmfullnameinfo = vminfo['guest_full_name']
@@ -94,7 +96,7 @@ class EsxiController(object):
 
     def get_inuse_vmnamelist(self):
         for vmPath in self.get_vmlist():
-            vm = self.server.get_vm_by_path(vmPath)
+            vm = self.vi_server.get_vm_by_path(vmPath)
             vminfo = vm.get_properties(from_cache=False)
             vmname = vminfo['name']
             vmfullnameinfo = vminfo['guest_full_name']
@@ -105,7 +107,7 @@ class EsxiController(object):
 
     def get_inuse_vmdict(self):
         for vmPath in self.get_vmlist():
-            vm = self.server.get_vm_by_path(vmPath)
+            vm = self.vi_server.get_vm_by_path(vmPath)
             vminfo = vm.get_properties(from_cache=False)
             vmname = vminfo['name']
             vmpath = vminfo['path']
@@ -116,21 +118,21 @@ class EsxiController(object):
 
     def power_off_all(self):
         for vmPath in self.get_vmlist():
-            vm = self.server.get_vm_by_path(vmPath)
+            vm = self.vi_server.get_vm_by_path(vmPath)
             if not vm.is_powered_off():
                 logging.debug('%s is powered on, now doing power off' % vmPath)
                 vm.power_off()
 
     def power_on_all(self):
         for vmPath in self.get_vmlist():
-            vm = self.server.get_vm_by_path(vmPath)
+            vm = self.vi_server.get_vm_by_path(vmPath)
             if not vm.is_powered_on():
                 logging.debug('%s is powered off, now doing power on' % vmPath)
                 vm.power_on()
 
     def power_on_in_use(self):
         for vmPath in self.get_vmlist():
-            vm = self.server.get_vm_by_path(vmPath)
+            vm = self.vi_server.get_vm_by_path(vmPath)
             vminfo = vm.get_properties(from_cache=False)
             vmname = vminfo['name']
             vmpath = vminfo['path']
@@ -141,7 +143,7 @@ class EsxiController(object):
 
     def power_off_in_use(self):
         for vmPath in self.get_vmlist():
-            vm = self.server.get_vm_by_path(vmPath)
+            vm = self.vi_server.get_vm_by_path(vmPath)
             vminfo = vm.get_properties(from_cache=False)
             vmname = vminfo['name']
             vmpath = vminfo['path']
@@ -197,7 +199,7 @@ def power_off_inuse_vm(serverlist, module_n, class_n):
 
 
 def __printbf(str):
-    print '\033[1;2;34m%s\033[0m' % str
+    print('\033[1;2;34m{}\033[0m'.format(str))
 
 
 def control_vm(serverlist, module=None, clsname=None, argfunc=None,
@@ -232,12 +234,12 @@ def output_formatter(serverlist, module=None, clsname=None, argfunc=None,
         value_width = 20
         header_format = '%-*s%*s'
         format = '%-*s%*s'
-        print '=' * width
+        print('=' * width)
         __printbf(header_format % (key_width, initk, value_width, initv))
         for k1, v1 in vm_dict.items():
-            print '-' * width
+            print('-' * width)
             __printbf(format % (key_width, k1, value_width, v1))
-        print '=' * width
+        print('=' * width)
 
         func3 = getattr(obj, argfunc3)
         func3()
@@ -255,17 +257,17 @@ def mul_proc_exec(serverlist, modulename, classname, argfunc):
 def main():
     parser = ArgumentParser(description='Esxi vm manager. Please check \
                              the log "/tmp/esxi_debug.txt" if have any questions. \
-                             You can terminate the script by "Ctrl + c".', \
+                             You can terminate the script by "Ctrl + c".',
                             epilog='Ex: esxi_controller.py -list_inuse all ')
-    parser.add_argument('-power_on', dest='power_on', choices=('all', 'usevms'), \
+    parser.add_argument('-power_on', dest='power_on', choices=('all', 'usevms'),
                         help='power on all vms or in using vms, the optional parameter (all | usevms)')
-    parser.add_argument('-power_off', dest='power_off', choices=('all', 'usevms'), \
+    parser.add_argument('-power_off', dest='power_off', choices=('all', 'usevms'),
                         help='power off all vms or in using vms, the optional parameter (all | usevms)')
-    parser.add_argument('-list_status', dest='list_status', choices=('all', 'usevms'), \
+    parser.add_argument('-list_status', dest='list_status', choices=('all', 'usevms'),
                         help='list all vms name and its status, the optional parameter (all | usevms)')
-    parser.add_argument('-list_type', dest='list_type', choices=('all', 'usevms'), \
+    parser.add_argument('-list_type', dest='list_type', choices=('all', 'usevms'),
                         help='list all vms name and its os type, the optional parameter (all | usevms)')
-    parser.add_argument('-list_inuse', nargs='?', dest='list_inuse', const='all', \
+    parser.add_argument('-list_inuse', nargs='?', dest='list_inuse', const='all',
                         choices=('all',), help='list all of vms were using. Default is all, \
                          if don\'t specify parameter')
     parser.add_argument('--version', action='version', version='%(prog)s 0.1')
@@ -274,11 +276,11 @@ def main():
     SERVERLIST = {
         # Esxi server IP address: password
         'xx.xx.xx.xx': 'xx',
-        'xx.xx.xx.xx': 'xx',
+        'yy.yy.yy.yy': 'yy',
     }
 
     # Obtain the current module name, class name
-    FILENAME = os.path.realpath(sys.argv[0]).split(os.sep)[-1]
+    FILENAME = os.path.realpath(sys.argv[0]).split(os.path.sep)[-1]
     MODULE_NAME = FILENAME.split('.')[0]
     CLASS_NAME = EsxiController().class_name
 
@@ -305,7 +307,7 @@ def main():
     elif args.list_inuse == 'all':
         mul_proc_exec(SERVERLIST, MODULE_NAME, CLASS_NAME, get_inusevm_list)
     else:
-        print 'Please specify an action. Aborting..\nUse -h for help'
+        print('Please specify an action. Aborting..\nUse -h for help')
         sys.exit(1)
 
 
@@ -313,4 +315,4 @@ if __name__ == '__main__':
     try:
         main()
     except (KeyboardInterrupt, EOFError):
-        print '^C received. Termination of the script..'
+        print('^C received. Termination of the script..')
